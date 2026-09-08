@@ -15,6 +15,8 @@ import {
 } from "recharts";
 import "./AVD.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://sih-104-fullstack.onrender.com";
+
 // --- Radial Gauge Component ---
 const RadialThreatGauge = ({ value }) => {
   const normalizedValue = Math.min(Math.max(value, 0), 100);
@@ -125,26 +127,37 @@ const AVDDashboard = () => {
   };
 
   // --- File Upload Handler ---
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setUploadedFileName(file.name);
       addLog("FILE", `Audio stream file mounted: ${file.name}`);
-      
-      // Simulate Deepfake Neural Inspection on local file
-      const reader = new FileReader();
-      reader.onload = () => {
-        addLog("INSPECT", "Running Fast Fourier Transform on uploaded file...");
-        setTimeout(() => {
-          const simulatedScore = Math.floor(Math.random() * 65) + 30;
-          setAiScore(simulatedScore);
-          addLog(
-            simulatedScore > sensitivity ? "CRITICAL" : "INFO",
-            `File Scan complete. Detected AI spectral probability: ${simulatedScore}%`
-          );
-        }, 1200);
-      };
-      reader.readAsArrayBuffer(file);
+      addLog("INSPECT", "Sending audio to the VoiceGuard neural engine...");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(`${API_BASE_URL}/api/predict/audio`, {
+          method: "POST",
+          body: formData,
+        });
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.detail?.message || payload.detail || "Audio prediction failed");
+        }
+
+        const result = payload.result;
+        const spoofScore = Math.round((result.scores.spoof || 0) * 100);
+        setAiScore(spoofScore);
+        addLog(
+          spoofScore > sensitivity ? "CRITICAL" : "INFO",
+          `File scan complete. ${result.label} probability: ${spoofScore}%`
+        );
+      } catch (error) {
+        addLog("ERROR", `Backend prediction failed: ${error.message}`);
+      }
     }
   };
 
