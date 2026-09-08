@@ -6,3 +6,5 @@ librosa
 numpy
 python-multipart
 pydantic
+soundfile
+imageio-ffmpeg
