@@ -1,4 +1,3 @@
-import React from "react";
 import AVD from "./components/AVD";
 
 function App() {

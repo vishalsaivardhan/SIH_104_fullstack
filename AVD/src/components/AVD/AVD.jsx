@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -82,7 +82,6 @@ const AVDDashboard = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [aiScore, setAiScore] = useState(18);
   const [sensitivity, setSensitivity] = useState(75);
-  const [audioSource, setAudioSource] = useState("mic");
   const [uploadedFileName, setUploadedFileName] = useState(null);
   
   // Real-time Metrics
@@ -130,7 +129,6 @@ const AVDDashboard = () => {
     const file = e.target.files[0];
     if (file) {
       setUploadedFileName(file.name);
-      setAudioSource("file");
       addLog("FILE", `Audio stream file mounted: ${file.name}`);
       
       // Simulate Deepfake Neural Inspection on local file
@@ -219,13 +217,10 @@ const AVDDashboard = () => {
 
       // Calculate Deepfake Risk Confidence
       setAiScore((prev) => {
-        let nextScore = prev;
         if (avgLevel > 85 || computedFormant > 1.5) {
-          nextScore = Math.min(100, prev + 3);
-        } else {
-          nextScore = Math.max(12, prev - 1);
+          return Math.min(100, prev + 3);
         }
-        return nextScore;
+        return Math.max(12, prev - 1);
       });
 
       // Update Spectral Bins
